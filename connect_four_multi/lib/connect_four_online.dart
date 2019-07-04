@@ -11,7 +11,7 @@ enum EventType {
 }
 
 class ConnectFourConnection extends ConnectFour {
-  static final int DEFAULT_PORT = 7;
+  static final int DEFAULT_PORT = 7677;
 
   ServerSocket _server;
   Socket _client;
@@ -58,6 +58,9 @@ class ConnectFourConnection extends ConnectFour {
           _ready = true;
           _onReady();
         });
+//      }).catchError((error) {
+//        print('Could not create serversocket');
+//        print(StackTrace.current.toString());
       });
     });
   }
@@ -132,9 +135,10 @@ class ConnectFourConnection extends ConnectFour {
     _onUpdate();
   }
 
-  void _onError() {
+  void _onError(error) {
     this.close();
     this.reset();
     print('Closing connection due to error');
+    print(StackTrace.current.toString());
   }
 }

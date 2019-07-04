@@ -13,14 +13,8 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        fontFamily: 'Montserrat',
-        textTheme: TextTheme(
-          headline: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
-          title: TextStyle(fontSize: 36.0, fontStyle: FontStyle.italic),
-          body1: TextStyle(fontSize: 24.0, fontFamily: 'Hind'),
-        ),
       ),
-      home: ConnectFourHomePage('Connect Four Test'),
+      home: ConnectFourHomePage('Connect Four'),
       debugShowCheckedModeBanner: false,
     );
   }
