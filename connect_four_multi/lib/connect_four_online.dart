@@ -67,8 +67,12 @@ class ConnectFourConnection extends ConnectFour {
 
   void reset() {
     _sendMessage(_msg(["event"], ["reset"]));
-    p1turn = _isHost;
+    _applyReset();
+  }
+
+  void _applyReset() {
     super.reset();
+    this.p1turn = _isHost;
   }
 
   @override
@@ -128,7 +132,7 @@ class ConnectFourConnection extends ConnectFour {
         }
         break;
       case 'reset':
-        super.reset();
+        _applyReset();
         break;
     }
 
