@@ -1,5 +1,5 @@
-name: connect_four_multi
-description: Connect four against a bot, or online against an opponent on the same wifi network.
+name: flutter_app
+description: A new Flutter project.
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -23,19 +23,15 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
-  get_ip: ^0.3.0
-  simple_permissions: ^0.1.2
+  get_ip: ^0.4.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
 
-module:
-  androidX: true
-
 # For information on the generic Dart part of this file, see the
-# following page: https://www.dartlang.org/tools/pub/pubspec
+# following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter.
 flutter:
