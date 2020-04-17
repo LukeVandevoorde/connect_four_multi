@@ -107,6 +107,7 @@ class ConnectFourConnection extends ConnectFour {
 
   void setStartingPlayer(bool playerOneStart) {
     super.setStartingPlayer(playerOneStart);
+    print('For some reason the child class method is being called');
     this._sendMessage(_msg(["event", "start"], ["switchStartingPlayer", (!playerOneStart).toString()]));
   }
 
@@ -193,7 +194,8 @@ class ConnectFourConnection extends ConnectFour {
         _applyReset();
         break;
       case 'switchStartingPlayer':
-        super.setStartingPlayer(bool.fromEnvironment(json['start']));
+        super.setStartingPlayer(json['start']);
+        this._onUpdate();
         break;
     }
 

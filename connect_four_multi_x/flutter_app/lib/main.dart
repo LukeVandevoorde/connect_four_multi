@@ -198,7 +198,7 @@ class _OnlineConnectFourPageState extends State<OnlineConnectFourPage> {
   _OnlineConnectFourPageState(bool isHost, String ipAddress) {
     this._ready = false;
     _message = "Waiting for connection";
-    game = ConnectFourConnection(() {setState(() {_ready = true;});}, _displayMove, () {setState(() {_message = "Connection lost";});});
+    game = ConnectFourConnection(() {setState(() {_ready = true; _displayMove();});}, _displayMove, () {setState(() {_message = "Connection lost";});});
     if(ipAddress != null) {
       game.connectIP(ipAddress);
     } else {
@@ -213,7 +213,10 @@ class _OnlineConnectFourPageState extends State<OnlineConnectFourPage> {
 
   Widget build (BuildContext context) {
     List<Widget> children = [
-    Center(child: Text(_message, style: TextStyle(fontSize: 24),),)
+      Container(
+        child: Center(child: Text(_message, style: TextStyle(fontSize: 24),),),
+        padding: EdgeInsets.only(top: 50),
+      )
     ];
     if (_ready) {
       children.insert(0, ConnectFourWidget(this.game, this._onTap));
@@ -230,7 +233,9 @@ class _OnlineConnectFourPageState extends State<OnlineConnectFourPage> {
                     game.reset();
                   });
                 } else if (option == "switch starting player") {
-                  game.setStartingPlayer(!game.p1start);
+                  setState(() {
+                    game.setStartingPlayer(!game.p1start);
+                  });
                 }
               },
               itemBuilder: (BuildContext context) {
