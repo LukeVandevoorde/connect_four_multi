@@ -94,11 +94,12 @@ class ConnectFour {
   int width, height;
   List<List<int>> tiles;
   List<_Line> usefulLines;
-  bool p1turn, won;
+  bool p1turn, p1start, won;
   _Line winLine;
 
   ConnectFour (this.width, this.height, bool playerOneStart) {
     this.p1turn = playerOneStart;
+    this.p1start = playerOneStart;
     playCount = 0;
     won = false;
     tiles = List(width);
@@ -133,6 +134,10 @@ class ConnectFour {
     for (int i = 0; i < other.usefulLines.length; i++) {
       this.usefulLines.add(other.usefulLines[i]);
     }
+  }
+
+  void setStartingPlayer(bool playerOneStart) {
+    this.p1start = playerOneStart;
   }
 
   void setDifficulty(int difficulty) {
@@ -176,7 +181,7 @@ class ConnectFour {
   }
 
   void reset() {
-    this.p1turn = true; // todo Have this return to original setting as specified by construction
+    this.p1turn = this.p1start; // todo Have this return to original setting as specified by construction
     this.winLine = null;
     won = false;
     tiles = List(width);
@@ -197,8 +202,8 @@ class ConnectFour {
     int bestMove = 0;
     for (int i = 0; i < game.width; i++) {
       if (game.validMove(i)) {
-//        int tentativeScore = _scoreMove(i, (game.difficulty == null ? 5: game.difficulty), (game.p1turn ? PLAYER_ONE : PLAYER_TWO), true, game);
-        int tentativeScore = _alphaBeta(i, (game.difficulty == null ? 7: game.difficulty), (game.p1turn ? PLAYER_ONE : PLAYER_TWO), true, game, EXTREME_SCORE, -EXTREME_SCORE);
+        int tentativeScore = _scoreMove(i, (game.difficulty == null ? 5: game.difficulty), (game.p1turn ? PLAYER_ONE : PLAYER_TWO), true, game);
+//        int tentativeScore = _alphaBeta(i, (game.difficulty == null ? 7: game.difficulty), (game.p1turn ? PLAYER_ONE : PLAYER_TWO), true, game, EXTREME_SCORE, -EXTREME_SCORE);
 
         if (tentativeScore > minScore) {
           bestMove = i;

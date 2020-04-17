@@ -1,3 +1,5 @@
+//import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'connect_four_online.dart';
 import 'package:flutter/foundation.dart';
@@ -36,6 +38,7 @@ class ConnectFourHomePage extends StatelessWidget {
               onSelected: (String option) {
                 Navigator.push(context, CupertinoPageRoute(builder: (ctxt) {
                   return OnlineConnectFourPage(false, "107.3.143.161");
+//                    return OnlineConnectFourPage(false, true);
                 }));
               },
               itemBuilder: (BuildContext context) {
@@ -115,12 +118,35 @@ class _SinglePlayerConnectFourPageState extends State<SinglePlayerConnectFourPag
           automaticallyImplyLeading: true,
           title: Text('Single Player'),
           actions: <Widget>[
-            IconButton(icon: Icon(Icons.refresh), onPressed: () {
-              setState(() {
-                widget.game.reset();
-                allowPlayerMove = true;
-              });
-            })
+            PopupMenuButton<String>(
+              onSelected: (String option) {
+                if(option == "reset") {
+                  setState(() {
+                    widget.game.reset();
+                    if(widget.game.p1turn) {
+                      allowPlayerMove = true;
+                    } else {
+                      compute(ConnectFour.bestMove, widget.game).then((int bestMove) {
+                            widget.game.move(bestMove);
+                            setState(() {
+                              allowPlayerMove = true;
+                            });
+                          }
+                      );
+                    }
+                    allowPlayerMove = widget.game.p1turn;
+                  });
+                } else if (option == "switch starting player") {
+                  widget.game.setStartingPlayer(!widget.game.p1start);
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return [
+                  PopupMenuItem<String>(value: "reset", child: Text("reset"),),
+                  PopupMenuItem<String>(value: "switch starting player", child: Text(widget.game.p1start?"Starting player: you":"Starting player: computer"),),
+                ];
+              },
+            )
           ],
         ),
         body: Container(
@@ -160,20 +186,23 @@ class OnlineConnectFourPage extends StatefulWidget {
 
   OnlineConnectFourPage(this.isHost, this.ipAddress, {Key key}): super(key: key);
 
-  _OnlineConnectFourPageState createState() => _OnlineConnectFourPageState(isHost, ipAddress);
+  _OnlineConnectFourPageState createState() => _OnlineConnectFourPageState(this.isHost, this.ipAddress);
 }
 
 class _OnlineConnectFourPageState extends State<OnlineConnectFourPage> {
   ConnectFourConnection game;
 
   String _message;
+  bool _ready;
 
   _OnlineConnectFourPageState(bool isHost, String ipAddress) {
+    this._ready = false;
     _message = "Waiting for connection";
-    game = ConnectFourConnection(_displayMove, _displayMove, () {setState(() {_message = "Connection lost";});});
+    game = ConnectFourConnection(() {setState(() {_ready = true;});}, _displayMove, () {setState(() {_message = "Connection lost";});});
     if(ipAddress != null) {
       game.connectIP(ipAddress);
     } else {
+      print('doing null ipaddress tings');
       if (isHost) {
         game.host();
       } else {
@@ -183,21 +212,44 @@ class _OnlineConnectFourPageState extends State<OnlineConnectFourPage> {
   }
 
   Widget build (BuildContext context) {
+    List<Widget> children = [
+    Center(child: Text(_message, style: TextStyle(fontSize: 24),),)
+    ];
+    if (_ready) {
+      children.insert(0, ConnectFourWidget(this.game, this._onTap));
+    }
     return Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: true,
           title: Text('Online'),
           actions: <Widget>[
-            IconButton(icon: Icon(Icons.refresh), onPressed: () {
-              setState(() {
-                game.reset();
-              });
-            })
+            PopupMenuButton<String>(
+              onSelected: (String option) {
+                if(option == "reset") {
+                  setState(() {
+                    game.reset();
+                  });
+                } else if (option == "switch starting player") {
+                  game.setStartingPlayer(!game.p1start);
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return [
+                  PopupMenuItem<String>(value: "reset", child: Text("reset"),),
+                  PopupMenuItem<String>(value: "switch starting player", child: Text(game.p1start?"Starting player: you":"Starting player: opponent"),),
+                ];
+              },
+            ),
+//            IconButton(icon: Icon(Icons.refresh), onPressed: () {
+//              setState(() {
+//                game.reset();
+//              });
+//            })
           ],
         ),
         body: Container(
           child: Column(
-            children: [Center(child: Text(_message, style: TextStyle(fontSize: 24),),)],
+            children: children,
             mainAxisAlignment: MainAxisAlignment.center,
           ),
           padding: EdgeInsets.all(6),
@@ -208,6 +260,7 @@ class _OnlineConnectFourPageState extends State<OnlineConnectFourPage> {
   void _onTap(int column) {
     setState(() {
       game.move(column);
+      _message = game.p1turn?"Your move":"Waiting for opponent";
     });
   }
 

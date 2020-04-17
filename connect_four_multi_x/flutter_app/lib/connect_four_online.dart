@@ -12,7 +12,7 @@ enum EventType {
 }
 
 class ConnectFourConnection extends ConnectFour {
-  static const int DEFAULT_PORT = 7677;
+  static const int DEFAULT_PORT = 27677;
 
   ServerSocket _server;
   Socket _client;
@@ -32,9 +32,13 @@ class ConnectFourConnection extends ConnectFour {
     this.p1turn = false;
 
     GetIp.ipAddress.then((my_ip) {
+      print('got my ip $my_ip');
       String subnet = my_ip.substring(0, my_ip.lastIndexOf('.'));
-      for (int i = 1; i < pow(2, my_ip.length - subnet.length - 1); i++) {
+//      for (int i = 1; i < pow(2, my_ip.length - subnet.length - 1); i++) {
+      for(int i =  1; i < 256; i++) {
+//        print('connecting to $subnet.$i');
         Socket.connect('$subnet.$i', DEFAULT_PORT).then((socket) {
+//          print('connected in theory');
           _endPoint = socket;
           _endPoint.listen(_onData).onError(_onError);
           _endPoint.done.whenComplete(() {
@@ -43,8 +47,10 @@ class ConnectFourConnection extends ConnectFour {
           });
           _ready = true;
           _onReady();
+          print('done connecting');
         }).catchError((error) {
-
+//          print('error while connecting: ');
+//          print(error.toString());
         });
       }
     });
@@ -72,9 +78,12 @@ class ConnectFourConnection extends ConnectFour {
 
     this.close();
     GetIp.ipAddress.then((my_ip) {
+      print('got my ip: $my_ip');
       ServerSocket.bind(my_ip, DEFAULT_PORT).then((serverSocket) {
+        print('bound');
         _server = serverSocket;
         _server.listen((socket) {
+          print('client connected in theory');
           _isHost = true;
           _client = socket;
           _client.listen(_onData).onError(_onError);
@@ -85,12 +94,20 @@ class ConnectFourConnection extends ConnectFour {
           _ready = true;
           _onReady();
           _server.close();
+        }).onError((error) {
+          print(error.toString());
+//          print('some sort of error occurred');
         });
 //      }).catchError((error) {
 //        print('Could not create serversocket');
 //        print(StackTrace.current.toString());
       });
     });
+  }
+
+  void setStartingPlayer(bool playerOneStart) {
+    super.setStartingPlayer(playerOneStart);
+    this._sendMessage(_msg(["event", "start"], ["switchStartingPlayer", (!playerOneStart).toString()]));
   }
 
   void reset() {
@@ -100,7 +117,7 @@ class ConnectFourConnection extends ConnectFour {
 
   void _applyReset() {
     super.reset();
-    this.p1turn = _isHost;
+    this.p1turn = this.p1start;
   }
 
   @override
@@ -174,6 +191,9 @@ class ConnectFourConnection extends ConnectFour {
         break;
       case 'reset':
         _applyReset();
+        break;
+      case 'switchStartingPlayer':
+        super.setStartingPlayer(bool.fromEnvironment(json['start']));
         break;
     }
 
