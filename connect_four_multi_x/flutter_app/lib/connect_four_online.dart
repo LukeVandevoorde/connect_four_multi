@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_ip/get_ip.dart';
+import 'package:connectivity/connectivity.dart';
 import 'connect_four.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -18,7 +19,8 @@ class ConnectFourConnection extends ConnectFour {
   Socket _client;
   Socket _endPoint;
 
-  VoidCallback _onReady, _onUpdate, _onConnectionEnd;
+  VoidCallback _onReady, _onUpdate;
+  Function(String) _onConnectionEnd;
   bool _isHost, _ready;
 
   // P1 is always defined as the user, whether host or client
@@ -31,29 +33,33 @@ class ConnectFourConnection extends ConnectFour {
     this.close();
     this.p1turn = false;
 
-    GetIp.ipAddress.then((my_ip) {
-      print('got my ip $my_ip');
-      String subnet = my_ip.substring(0, my_ip.lastIndexOf('.'));
-//      for (int i = 1; i < pow(2, my_ip.length - subnet.length - 1); i++) {
-      for(int i =  1; i < 256; i++) {
-//        print('connecting to $subnet.$i');
-        Socket.connect('$subnet.$i', DEFAULT_PORT).then((socket) {
-//          print('connected in theory');
-          _endPoint = socket;
-          _endPoint.listen(_onData).onError(_onError);
-          _endPoint.done.whenComplete(() {
-            print('Destroying my sockets');
-            this.destroy();
-          });
-          _ready = true;
-          _onReady();
-          print('done connecting');
-        }).catchError((error) {
+    Connectivity().checkConnectivity().then((ConnectivityResult result) {
+      if(result == ConnectivityResult.wifi) {
+        GetIp.ipAddress.then((my_ip) {
+          print('got my ip $my_ip');
+          String subnet = my_ip.substring(0, my_ip.lastIndexOf('.'));
+          for(int i =  1; i < 256; i++) {
+            Socket.connect('$subnet.$i', DEFAULT_PORT).then((socket) {
+              _endPoint = socket;
+              _endPoint.listen(_onData).onError(_onError);
+              _endPoint.done.whenComplete(() {
+                print('Destroying my sockets');
+                this.destroy();
+              });
+              _ready = true;
+              _onReady();
+              print('done connecting');
+            }).catchError((error) {
 //          print('error while connecting: ');
 //          print(error.toString());
+            });
+          }
         });
+      } else {
+        _onConnectionEnd("Connection failed: you are not connected to a wifi network");
       }
     });
+
   }
 
   void connectIP(String ipAddress) {
@@ -88,7 +94,7 @@ class ConnectFourConnection extends ConnectFour {
           _client = socket;
           _client.listen(_onData).onError(_onError);
           _client.done.then((value) {
-            this._onConnectionEnd();
+            this._onConnectionEnd("The connection was closed");
             this.close();
           });
           _ready = true;
@@ -96,7 +102,6 @@ class ConnectFourConnection extends ConnectFour {
           _server.close();
         }).onError((error) {
           print(error.toString());
-//          print('some sort of error occurred');
         });
 //      }).catchError((error) {
 //        print('Could not create serversocket');
@@ -108,7 +113,7 @@ class ConnectFourConnection extends ConnectFour {
   void setStartingPlayer(bool playerOneStart) {
     super.setStartingPlayer(playerOneStart);
     print('For some reason the child class method is being called');
-    this._sendMessage(_msg(["event", "start"], ["switchStartingPlayer", (!playerOneStart).toString()]));
+    this._sendMessage(_msg(["event", "start"], ["switchStartingPlayer", (!playerOneStart)]));
   }
 
   void reset() {
@@ -130,20 +135,22 @@ class ConnectFourConnection extends ConnectFour {
     return super.move(column);
   }
 
-  void close() {
+  Future<void> close() async {
+    print('Closing sockets');
     if (_client != null) {
-      _client.close();
+      await _client.close();
     }
     if (_server != null) {
-      _server.close();
+      await _server.close();
     }
     if (_endPoint != null) {
-      _endPoint.close();
+      await _endPoint.close();
     }
     _ready = false;
   }
 
   void destroy() {
+    print('Destroying sockets');
     if (_client != null) {
       _client.destroy();
     }
@@ -205,8 +212,8 @@ class ConnectFourConnection extends ConnectFour {
   void _onError(error) {
     this.close();
     this.reset();
-    this._onConnectionEnd();
-    print('Closing connection due to error');
+    this._onConnectionEnd("An error occurred");
+    print('Closing connection due to error (this might be logged twice sorry line connect_four_online.dart line 218)' + error.toString());
     print(StackTrace.current.toString());
   }
 }

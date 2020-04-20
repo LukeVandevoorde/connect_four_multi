@@ -37,12 +37,35 @@ class ConnectFourHomePage extends StatelessWidget {
             PopupMenuButton<String>(
               onSelected: (String option) {
                 Navigator.push(context, CupertinoPageRoute(builder: (ctxt) {
-                  return OnlineConnectFourPage(false, "107.3.143.161");
-//                    return OnlineConnectFourPage(false, true);
+                  // 107.3.143.161
+                  TextEditingController ipController = TextEditingController(text: "107.3.143.161");
+
+                  return Scaffold(
+                    appBar: AppBar(
+                      title: Text("Connect IP"),
+                    ),
+                    body: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Container(
+                          child: TextField(
+                            textAlign: TextAlign.center,
+                            controller: ipController,
+                            onSubmitted: (String ip) {
+                              Navigator.push(context, CupertinoPageRoute(builder: (BuildContext context) {
+                                return OnlineConnectFourPage(false, ip);
+                              }));
+                            },
+                          ),
+                          padding: EdgeInsets.all(20),
+                        )
+                      ],
+                    ),
+                  );
                 }));
               },
               itemBuilder: (BuildContext context) {
-                return [PopupMenuItem<String>(value: "connect ip", child: Text("connect to luke lol"),)];
+                return [PopupMenuItem<String>(value: "connect ip", child: Text("Connect IP"),)];
               },
             )
           ],
@@ -198,7 +221,7 @@ class _OnlineConnectFourPageState extends State<OnlineConnectFourPage> {
   _OnlineConnectFourPageState(bool isHost, String ipAddress) {
     this._ready = false;
     _message = "Waiting for connection";
-    game = ConnectFourConnection(() {setState(() {_ready = true; _displayMove();});}, _displayMove, () {setState(() {_message = "Connection lost";});});
+    game = ConnectFourConnection(() {setState(() {_ready = true; _displayMove();});}, _displayMove, (String connectionEndMessage) {setState(() {_message = connectionEndMessage;});});
     if(ipAddress != null) {
       game.connectIP(ipAddress);
     } else {
@@ -221,7 +244,12 @@ class _OnlineConnectFourPageState extends State<OnlineConnectFourPage> {
     if (_ready) {
       children.insert(0, ConnectFourWidget(this.game, this._onTap));
     }
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        await game.close();
+        return true;
+      },
+      child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: true,
           title: Text('Online'),
@@ -259,6 +287,7 @@ class _OnlineConnectFourPageState extends State<OnlineConnectFourPage> {
           ),
           padding: EdgeInsets.all(6),
         )
+    )
     );
   }
 
