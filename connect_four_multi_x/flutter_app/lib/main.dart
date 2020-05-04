@@ -38,7 +38,7 @@ class ConnectFourHomePage extends StatelessWidget {
               onSelected: (String option) {
                 Navigator.push(context, CupertinoPageRoute(builder: (ctxt) {
                   // 107.3.143.161
-                  TextEditingController ipController = TextEditingController(text: "107.3.143.161");
+                  TextEditingController ipController = TextEditingController();
 
                   return Scaffold(
                     appBar: AppBar(
@@ -246,7 +246,7 @@ class _OnlineConnectFourPageState extends State<OnlineConnectFourPage> {
     }
     return WillPopScope(
       onWillPop: () async {
-        await game.close();
+        await game.destroy();
         return true;
       },
       child: Scaffold(

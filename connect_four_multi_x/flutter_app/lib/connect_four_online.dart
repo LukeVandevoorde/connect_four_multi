@@ -149,7 +149,7 @@ class ConnectFourConnection extends ConnectFour {
     _ready = false;
   }
 
-  void destroy() {
+  Future<void> destroy() async {
     print('Destroying sockets');
     if (_client != null) {
       _client.destroy();
